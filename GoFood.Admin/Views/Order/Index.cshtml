@@ -1,0 +1,157 @@
+﻿@model GoFood.ViewModels.Common.PagedResult<GoFood.ViewModels.Catalog.Orders.OrderViewModel>
+@using GoFood.Data.Enums
+
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4">Quản lý đơn hàng</h4>
+
+    <div class="card">
+        <div class="card-header">
+            <form asp-action="Index" method="get">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label">Từ khóa</label>
+                        <input type="text" class="form-control" name="keyword" value="@ViewBag.Keyword" placeholder="Tìm theo mã đơn, tên khách hàng..." />
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label">Trạng thái</label>
+                        <select class="form-select" name="status">
+                            <option value="">Tất cả</option>
+                            @foreach (var status in Enum.GetValues(typeof(Status)))
+                            {
+                                <option value="@status" selected="@(ViewBag.Status != null && ViewBag.Status.ToString() == status.ToString())">@status</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">Thời gian</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control datepicker" name="fromDate" value="@ViewBag.FromDate" placeholder="Từ ngày" />
+                            <input type="text" class="form-control datepicker" name="toDate" value="@ViewBag.ToDate" placeholder="Đến ngày" />
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-2 d-flex align-items-end">
+                        <div class="btn-group w-100">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bx bx-search"></i> Tìm
+                            </button>
+                            <a href="/Order/Index" class="btn btn-dark">
+                                <i class="bx bx-reset"></i> Reset
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            }
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                          @*   <th>Mã đơn</th> *@
+                            <th>Khách hàng</th>
+                            <th>Số điện thoại</th>
+                            <th>Tổng tiền</th>
+                            <th>Ngày đặt</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                @* <td>@item.OrderCode</td> *@
+                                <td>@item.Name</td>
+                                <td>@item.PhoneNumber</td>
+                                <td>@item.TotalAmount.ToString("N0") đ</td>
+                                <td>@item.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <span class="badge bg-@GetStatusClass(item.Status)">
+                                        @item.Status.ToString()
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                            <i class="bx bx-dots-vertical-rounded"></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="@Url.Action("Details", new { id = item.Id })">
+                                                <i class="bx bx-detail me-1"></i> Chi tiết
+                                            </a>
+                                            <a class="dropdown-item" href="@Url.Action("ExportInvoice", new { id = item.Id })">
+                                                <i class="bx bx-printer me-1"></i> In hóa đơn
+                                            </a>
+                                            @if (item.Status != Status.Cancelled)
+                                            {
+                                                <a class="dropdown-item text-danger" href="javascript:void(0);" 
+                                                   onclick="confirmCancel('@item.Id')">
+                                                    <i class="bx bx-x-circle me-1"></i> Hủy đơn
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @await Component.InvokeAsync("Pager", Model)
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.datepicker').datepicker({
+                format: 'dd/mm/yyyy',
+                autoclose: true,
+                todayHighlight: true
+            });
+        });
+
+        function confirmCancel(id) {
+            if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+                $.post('/Order/CancelOrder/' + id, function (result) {
+                    if (result.success) {
+                        toastr.success('Hủy đơn hàng thành công');
+                        setTimeout(function() { location.reload(); }, 1000);
+                    } else {
+                        toastr.error('Có lỗi xảy ra');
+                    }
+                });
+            }
+        }
+    </script>
+}
+
+@functions {
+    private string GetStatusClass(Status status)
+    {
+        return status switch
+        {
+            Status.Pending => "warning",
+            Status.Shipping => "info",
+            Status.Completed => "success",
+            _ => "danger"
+        };
+    }
+}

@@ -1,0 +1,74 @@
+@using GoFood.ViewModels.Catalog.Category
+@model CategoryUpdateRequest
+
+@{
+    ViewData["Title"] = "Cập nhật danh mục";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <h1 class="mt-4">Cập nhật danh mục</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+        <li class="breadcrumb-item active">Cập nhật danh mục</li>
+    </ol>
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-6 col-xs-12">
+                    <a class="btn btn-success" asp-action="Index" asp-controller="Category">Về danh sách</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="col-md-8 mx-auto">
+                <form asp-action="Edit" method="post" id="edit-form">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-3 row">
+                        <label asp-for="Name" class="col-sm-3 col-form-label">Tên danh mục</label>
+                        <div class="col-sm-9">
+                            <input asp-for="Name" class="form-control" placeholder="Nhập tên danh mục..." />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+
+
+                    <div class="mb-3 row">
+                        <div class="col-sm-9 offset-sm-3">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bx bx-save me-1"></i> Cập nhật
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bx bx-arrow-back me-1"></i> Quay lại
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#edit-form").validate({
+                rules: {
+                    Name: {
+                        required: true,
+                        minlength: 2
+                    }
+                },
+                messages: {
+                    Name: {
+                        required: "Vui lòng nhập tên danh mục",
+                        minlength: "Tên danh mục phải có ít nhất 2 ký tự"
+                    }
+                }
+            });
+        });
+    </script>
+} 

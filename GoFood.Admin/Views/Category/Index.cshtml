@@ -1,0 +1,104 @@
+@using GoFood.ViewModels.Catalog.Category
+@model List<CategoryViewModels>
+
+@{
+    ViewData["Title"] = "Danh sách danh mục";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="text-end mb-4">
+    <a asp-action="Create" asp-controller="Category" class="btn btn-primary">
+        <i class="bx bx-plus me-1"></i> Tạo danh mục mới
+    </a>
+</div>
+
+<div class="card">
+    <h5 class="card-header">@TempData["result"]</h5>
+    <div class="card-header">
+        <form asp-action="Index" method="get">
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Tên danh mục</label>
+                    <input type="text" value="@ViewBag.Keyword" name="keyword" class="form-control" placeholder="Nhập tên danh mục..." />
+                </div>
+                <div class="col-md-2 mb-2 d-flex align-items-end">
+                    <div class="btn-group w-100">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bx bx-search"></i> Tìm
+                        </button>
+                        <button type="button" onclick="window.location.href='/Category/Index'" class="btn btn-dark">
+                            <i class="bx bx-reset"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive text-nowrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>TÊN DANH MỤC</th>
+                    <th>SÔ LƯỢNG SẢN PHẨM</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody class="table-border-bottom-0" id="categoryList">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr id="category-@item.Id">
+                            <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                            <td id="product-count-@item.Id">@Html.DisplayFor(modelItem => item.ProductCount)</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="@Url.Action("Edit", new { id = item.Id })">
+                                            <i class="bx bx-edit-alt me-1"></i> Chỉnh sửa
+                                        </a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center">Không có dữ liệu</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateCategoryList() {
+            $.ajax({
+                url: '/Category/GetAll',
+                type: 'GET',
+                success: function(categories) {
+                    categories.forEach(function(category) {
+                        const productCountElement = document.getElementById(`product-count-${category.id}`);
+                        if (productCountElement) {
+                            productCountElement.textContent = category.productCount;
+                        }
+                    });
+                },
+                error: function(error) {
+                    console.error('Error updating categories:', error);
+                }
+            });
+        }
+
+        // Cập nhật danh sách mỗi 30 giây
+        setInterval(updateCategoryList, 30000);
+    </script>
+}

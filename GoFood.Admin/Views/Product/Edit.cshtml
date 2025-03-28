@@ -1,0 +1,443 @@
+@using GoFood.ViewModels.Catalog.Products
+@using System.IO
+@model ProductUpdateRequest
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Cập nhật sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var baseUrl = Configuration["BaseAddress"]?.TrimEnd('/');
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold py-3 mb-4">
+                <span class="text-muted fw-light">Sản phẩm /</span> Cập nhật
+            </h4>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bx bx-arrow-back me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="col-md-8 mx-auto">
+                <form asp-action="Edit" id="edit-form" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="row mb-3" id="image-container">
+                        <label class="col-sm-2 col-form-label">Hình ảnh sản phẩm</label>
+                        <div class="col-sm-10">
+                            <div class="row" id="current-images">
+                                @if (Model.ProductImages != null && Model.ProductImages.Count > 0)
+                                {
+                                    foreach (var image in Model.ProductImages)
+                                    {
+                                        <div class="col-md-4 mb-3">
+                                            <div class="position-relative">
+                                                <img src="@image.ImageUrl" class="img-thumbnail" style="width: 100%; height: 200px; object-fit: cover;"
+                                                     onerror="this.onerror=null; this.src='/images/no-image.png'; console.log('Lỗi tải hình ảnh từ:', '@image.ImageUrl');">
+                                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 remove-image" data-image-id="@image.Id">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                <div class="position-absolute bottom-0 start-0 m-2 bg-dark bg-opacity-75 text-white px-2 py-1 rounded small">
+                                                    @{
+                                                        var fileName = !string.IsNullOrEmpty(image.ImageUrl) ? 
+                                                            image.ImageUrl.Split('/').LastOrDefault() : 
+                                                            "Không có tên";
+                                                    }
+                                                    @fileName
+                                                </div>
+                                                <div class="position-absolute bottom-0 end-0 m-2 bg-dark bg-opacity-75 text-white px-2 py-1 rounded small">
+                                                    ID: @image.Id
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="col-12">
+                                        <div class="alert alert-warning">
+                                            Chưa có hình ảnh nào. Vui lòng thêm ít nhất một hình ảnh.
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <!-- Phần tải lên và xem trước hình ảnh -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label for="ProductImages" class="form-label">Thêm hình ảnh mới (@((Model.ProductImages?.Count ?? 0) < 3 ? "Còn " + (3 - (Model.ProductImages?.Count ?? 0)) + " ảnh" : "Đã đủ 3 ảnh"))</label>
+                                        <input id="ProductImages" name="ProductImages" type="file" class="form-control" multiple accept="image/*"
+                                               @((Model.ProductImages?.Count ?? 0) >= 3 ? "disabled" : "")>
+                                        <div class="text-danger max-images-reached" style="@((Model.ProductImages?.Count ?? 0) >= 3 ? "" : "display: none;")">
+                                            Số lượng ảnh đã đạt giới hạn tối đa (3 ảnh)
+                                        </div>
+                                        <div class="form-text">Hỗ trợ JPG, JPEG, PNG, GIF. Tối đa 2MB mỗi ảnh.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row" id="preview-container">
+                                <!-- Hình ảnh xem trước sẽ hiển thị ở đây -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label">Tên sản phẩm</label>
+                        <input asp-for="Name" class="form-control" placeholder="Nhập tên sản phẩm..." />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Mô tả</label>
+                        <textarea asp-for="Description" rows="5" class="form-control" placeholder="Nhập mô tả sản phẩm..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Price" class="form-label">Giá</label>
+                        <div class="input-group">
+                            <input asp-for="Price" class="form-control" placeholder="Nhập giá sản phẩm..." />
+                            <span class="input-group-text">VNĐ</span>
+                        </div>
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Quantity" class="form-label">Số lượng</label>
+                        <input asp-for="Quantity" class="form-control" placeholder="Nhập số lượng..." />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CategoryId" class="form-label">Danh mục</label>
+                        <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
+                            <option value="">-- Chọn danh mục --</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bx bx-save me-1"></i> Cập nhật
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bx bx-arrow-back me-1"></i> Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Debug info cho dev
+            console.log("Initialize with BaseUrl:", '@baseUrl');
+            console.log("Product ID:", '@Model.Id');
+            console.log("Current images:", @Html.Raw(Json.Serialize(Model.ProductImages?.Select(p => new { Id = p.Id, Url = p.ImageUrl }))));
+            
+            // Helper function để hiển thị thông báo
+            function showToast(message, type) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: type,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
+            
+            // Hiển thị cảnh báo từ TempData nếu có
+            @if (TempData["warning"] != null)
+            {
+                <text>
+                showToast('@TempData["warning"]', 'warning');
+                </text>
+            }
+            
+            // Hàm cập nhật trạng thái số lượng ảnh
+            function updateImageCount() {
+                const currentImageCount = $('#current-images .col-md-4').length + $('#preview-container .temp-image').length;
+                const maxImages = 3;
+                const remainingSlots = maxImages - currentImageCount;
+                
+                console.log("Số lượng ảnh hiện tại:", currentImageCount, "Còn lại:", remainingSlots);
+                
+                // Cập nhật label
+                $('.form-label[for="ProductImages"]').text(`Thêm hình ảnh mới (${remainingSlots > 0 ? "Còn " + remainingSlots + " ảnh" : "Đã đủ 3 ảnh"})`);
+                
+                // Cập nhật trạng thái input file
+                if (remainingSlots <= 0) {
+                    $('.max-images-reached').show();
+                    $('#ProductImages').prop('disabled', true);
+                } else {
+                    $('.max-images-reached').hide();
+                    $('#ProductImages').prop('disabled', false);
+                }
+                
+                return remainingSlots;
+            }
+            
+            // Khởi tạo kiểm tra số lượng ảnh
+            updateImageCount();
+            
+            // Xử lý upload ảnh
+            $("#ProductImages").change(function () {
+                console.log("[JS] ProductImages change event triggered");
+                
+                const files = this.files;
+                if (!files || files.length === 0) {
+                    console.log("[JS] No files selected");
+                    return;
+                }
+                
+                console.log("[JS] Files selected:", files.length);
+                
+                // Kiểm tra số lượng ảnh hiện tại
+                const remainingSlots = updateImageCount();
+                
+                if (remainingSlots <= 0) {
+                    showToast('Số lượng ảnh đã đạt giới hạn tối đa (3 ảnh)', 'error');
+                    $(this).val('');
+                    console.log("[JS] Maximum image count reached");
+                    return;
+                }
+
+                // Giới hạn số lượng file được xử lý
+                const filesToProcess = Math.min(files.length, remainingSlots);
+                
+                if (files.length > remainingSlots) {
+                    showToast(`Chỉ ${remainingSlots} ảnh đầu tiên sẽ được xử lý do đã đạt giới hạn`, 'warning');
+                    console.log(`[JS] Limited to ${remainingSlots} files due to limit`);
+                }
+                
+                // Xử lý từng file
+                for (let i = 0; i < filesToProcess; i++) {
+                    const file = files[i];
+                    console.log(`[JS] Processing file ${i+1}/${filesToProcess}: ${file.name}, ${file.size} bytes, ${file.type}`);
+                    
+                    // Kiểm tra kích thước file (2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        showToast(`File ${file.name} vượt quá 2MB`, 'error');
+                        console.log(`[JS] File ${file.name} exceeds size limit`);
+                        continue;
+                    }
+
+                    // Kiểm tra định dạng file
+                    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
+                    if (!validTypes.includes(file.type)) {
+                        showToast(`File ${file.name} không đúng định dạng (chỉ hỗ trợ JPEG, PNG, GIF)`, 'error');
+                        console.log(`[JS] File ${file.name} has invalid type: ${file.type}`);
+                        continue;
+                    }
+
+                    // Tạo ID cho preview
+                    const previewId = 'preview-' + Math.random().toString(36).substring(2, 15);
+                    console.log(`[JS] Created preview container with ID: ${previewId}`);
+                    
+                    // Thêm container cho preview
+                    $('#preview-container').append(`
+                        <div class="col-md-4 mb-3 temp-image" id="${previewId}">
+                            <div class="position-relative">
+                                <div class="img-thumbnail d-flex align-items-center justify-content-center" style="width: 100%; height: 200px;">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    
+                    // Đọc file và hiển thị preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $(`#${previewId} .img-thumbnail`).html(`
+                            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">
+                        `);
+                        console.log(`[JS] Preview image loaded for ${file.name}`);
+                    }
+                    reader.readAsDataURL(file);
+                    
+                    // Upload file
+                    const formData = new FormData();
+                    formData.append('productId', '@Model.Id');
+                    formData.append('image', file);
+                    
+                    console.log(`[JS] Sending AJAX request to upload image: ${file.name}`);
+
+                    $.ajax({
+                        url: '@Url.Action("AddImage", "Product")',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            console.log(`[JS] AddImage response:`, response);
+                            
+                            if (response.success) {
+                                // Lấy URL ảnh từ response
+                                if (response.images && response.images.length > 0) {
+                                    const imageUrl = response.images[0];
+                                    console.log(`[JS] Image URL from response: ${imageUrl}`);
+                                    
+                                    // Trích xuất ID ảnh từ URL
+                                    const fileName = imageUrl.split('/').pop();
+                                    const imageId = fileName.split('.')[0];
+                                    console.log(`[JS] Extracted imageId: ${imageId}`);
+                                    
+                                    // Cập nhật preview thành ảnh chính thức
+                                    $(`#${previewId}`).replaceWith(`
+                                        <div class="col-md-4 mb-3">
+                                            <div class="position-relative">
+                                                <img src="${imageUrl}" class="img-thumbnail" style="width: 100%; height: 200px; object-fit: cover;">
+                                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 remove-image" data-image-id="${imageId}">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                <div class="position-absolute bottom-0 start-0 m-2 bg-dark bg-opacity-75 text-white px-2 py-1 rounded small">
+                                                    ${fileName}
+                                                </div>
+                                                <div class="position-absolute bottom-0 end-0 m-2 bg-dark bg-opacity-75 text-white px-2 py-1 rounded small">
+                                                    ID: ${imageId}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `);
+                                    
+                                    showToast('Thêm ảnh thành công', 'success');
+                                    updateImageCount();
+                                } else {
+                                    showToast('Ảnh đã được lưu nhưng không thể hiển thị', 'warning');
+                                    console.log(`[JS] Image saved but URL not returned`);
+                                    $(`#${previewId}`).remove();
+                                    updateImageCount();
+                                }
+                            } else {
+                                showToast(response.message || 'Thêm ảnh thất bại', 'error');
+                                console.log(`[JS] Upload failed: ${response.message}`);
+                                $(`#${previewId}`).remove();
+                                updateImageCount();
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error(`[JS] AJAX error:`, { status, error, response: xhr.responseText });
+                            
+                            let errorMessage = 'Có lỗi xảy ra khi thêm ảnh';
+                            try {
+                                const responseJson = JSON.parse(xhr.responseText);
+                                if (responseJson && responseJson.message) {
+                                    errorMessage = responseJson.message;
+                                }
+                            } catch (e) {
+                                console.error(`[JS] Error parsing error response:`, e);
+                            }
+                            
+                            showToast(errorMessage, 'error');
+                            $(`#${previewId}`).remove();
+                            updateImageCount();
+                        }
+                    });
+                }
+                
+                // Reset input file
+                $(this).val('');
+            });
+
+            // Xóa ảnh
+            $(document).on("click", ".remove-image", function() {
+                const button = $(this);
+                const imageId = button.data("image-id");
+                const imageContainer = button.closest('.col-md-4');
+                
+                console.log(`[JS] Removing image with ID: ${imageId}`);
+                
+                if (!imageId) {
+                    showToast('Không thể xác định ảnh cần xóa', 'error');
+                    return;
+                }
+                
+                Swal.fire({
+                    title: 'Xác nhận xóa',
+                    text: "Bạn có chắc muốn xóa ảnh này?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Đồng ý',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Hiển thị overlay loading
+                        imageContainer.find('.position-relative').append(`
+                            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+                                 style="background: rgba(0,0,0,0.5);">
+                                <div class="spinner-border text-light" role="status"></div>
+                            </div>
+                        `);
+                        
+                        console.log(`[JS] Sending AJAX request to remove image ID: ${imageId}`);
+                        
+                        $.ajax({
+                            url: '@Url.Action("RemoveImage", "Product")',
+                            type: 'POST',
+                            data: { imageId: imageId },
+                            success: function(response) {
+                                console.log(`[JS] RemoveImage response:`, response);
+                                
+                                if (response.success) {
+                                    imageContainer.fadeOut(300, function() {
+                                        $(this).remove();
+                                        showToast('Xóa ảnh thành công', 'success');
+                                        updateImageCount();
+                                    });
+                                } else {
+                                    // Xóa overlay loading
+                                    imageContainer.find('.position-absolute').not(':has(button)').remove();
+                                    showToast(response.message || 'Xóa ảnh thất bại', 'error');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                // Xóa overlay loading
+                                imageContainer.find('.position-absolute').not(':has(button)').remove();
+                                
+                                console.error(`[JS] Error removing image:`, { xhr, status, error });
+                                
+                                let errorMessage = 'Có lỗi xảy ra khi xóa ảnh';
+                                try {
+                                    const responseJson = xhr.responseJSON;
+                                    if (responseJson && responseJson.message) {
+                                        errorMessage = responseJson.message;
+                                    }
+                                } catch (e) {
+                                    console.error(`[JS] Error parsing error response:`, e);
+                                }
+                                
+                                showToast(errorMessage, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Kiểm tra form submit
+            $("#edit-form").submit(function(e) {
+                // Kiểm tra nếu không có ảnh nào
+                if ($("#current-images .col-md-4").length === 0 && $("#preview-container .temp-image").length === 0) {
+                    e.preventDefault();
+                    showToast('Vui lòng thêm ít nhất một ảnh cho sản phẩm', 'error');
+                    return false;
+                }
+                return true;
+            });
+        });
+    </script>
+}

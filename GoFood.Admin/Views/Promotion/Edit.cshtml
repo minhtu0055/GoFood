@@ -1,0 +1,212 @@
+@using GoFood.ViewModels.Catalog.Promotions
+@using GoFood.Data.Enums
+@using Microsoft.Extensions.Configuration
+@using System.Linq
+@inject IConfiguration Configuration
+@model UpdatePromotionRequest
+
+@{
+    ViewData["Title"] = "Cập nhật khuyến mãi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var baseUrl = Configuration["BaseAddress"]?.TrimEnd('/');
+}
+
+<div class="container-fluid">
+    <h1 class="mt-4">Cập nhật khuyến mãi</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+        <li class="breadcrumb-item active">Cập nhật khuyến mãi</li>
+    </ol>
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-6 col-xs-12">
+                    <a class="btn btn-success" asp-action="Index" asp-controller="Promotion">Về danh sách</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="col-md-8 mx-auto">
+                <form asp-action="Edit" method="post" id="edit-form">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-3 row">
+                        <label asp-for="Name" class="col-sm-3 col-form-label">Tên khuyến mãi</label>
+                        <div class="col-sm-9">
+                            <input asp-for="Name" class="form-control" placeholder="Nhập tên khuyến mãi..." />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="Description" class="col-sm-3 col-form-label">Mô tả</label>
+                        <div class="col-sm-9">
+                            <textarea asp-for="Description" rows="5" class="form-control" placeholder="Nhập mô tả khuyến mãi..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="StartDate" class="col-sm-3 col-form-label">Ngày bắt đầu</label>
+                        <div class="col-sm-9">
+                            <input asp-for="StartDate" type="datetime-local" class="form-control" />
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="EndDate" class="col-sm-3 col-form-label">Ngày kết thúc</label>
+                        <div class="col-sm-9">
+                            <input asp-for="EndDate" type="datetime-local" class="form-control" />
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="DiscountType" class="col-sm-3 col-form-label">Loại giảm giá</label>
+                        <div class="col-sm-9">
+                            <select asp-for="DiscountType" asp-items="@ViewBag.DiscountTypes" class="form-select">
+                            </select>
+                            <span asp-validation-for="DiscountType" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="DiscountValue" class="col-sm-3 col-form-label">Giá trị giảm</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input asp-for="DiscountValue" class="form-control" placeholder="Nhập giá trị giảm..." />
+                                <span class="input-group-text discount-unit">VNĐ</span>
+                            </div>
+                            <span asp-validation-for="DiscountValue" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label class="col-sm-3 col-form-label">Sản phẩm áp dụng</label>
+                        <div class="col-sm-9">
+                            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                <table class="table table-bordered">
+                                    <thead style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                                        <tr>
+                                            <th>CHỌN</th>
+                                            <th>ẢNH</th>
+                                            <th>TÊN</th>
+                                            <th>GIÁ</th>
+                                            <th>DANH MỤC</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var product in (IEnumerable<GoFood.ViewModels.Catalog.Products.ProductViewModels>)ViewBag.Products)
+                                        {
+                                            var isSelected = Model.ProductIds != null && Model.ProductIds.Contains(product.Id);
+                                            <tr>
+                                                <td class="text-center" style="width: 50px;">
+                                                    <input type="checkbox" name="ProductIds" value="@product.Id" 
+                                                           class="form-check-input" @(isSelected ? "checked" : "") />
+                                                </td>
+                                                <td style="width: 80px;">
+                                                    @{
+                                                        var imageUrl = "/images/no-image.png";
+                                                        if (product.Images != null && product.Images.Count > 0)
+                                                        {
+                                                            imageUrl = baseUrl + product.Images[0];
+                                                        }
+                                                    }
+                                                    <img src="@imageUrl" class="rounded" style="width: 50px; height: 50px; object-fit: cover;" alt="@product.Name" />
+                                                </td>
+                                                <td>@product.Name</td>
+                                                <td>@product.Price.ToString("N0")đ</td>
+                                                <td>@product.CategoryName</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <div class="col-sm-9 offset-sm-3">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bx bx-save me-1"></i> Cập nhật
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bx bx-arrow-back me-1"></i> Quay lại
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Cập nhật đơn vị giảm giá khi thay đổi loại giảm giá
+            function updateDiscountUnit() {
+                var discountType = $("#DiscountType").val();
+                var unit = discountType == "@((int)DiscountType.Percentage)" ? "%" : "VNĐ";
+                $(".discount-unit").text(unit);
+            }
+
+            $("#DiscountType").change(updateDiscountUnit);
+            updateDiscountUnit();
+
+            // Validate form
+            $("#edit-form").validate({
+                rules: {
+                    Name: {
+                        required: true,
+                        minlength: 3
+                    },
+                    StartDate: {
+                        required: true
+                    },
+                    EndDate: {
+                        required: true
+                    },
+                    DiscountValue: {
+                        required: true,
+                        min: 0
+                    },
+                    MinimumOrderValue: {
+                        required: true,
+                        min: 0
+                    },
+                    "ProductIds": {
+                        required: true,
+                        minlength: 1
+                    }
+                },
+                messages: {
+                    Name: {
+                        required: "Vui lòng nhập tên khuyến mãi",
+                        minlength: "Tên khuyến mãi phải có ít nhất 3 ký tự"
+                    },
+                    StartDate: {
+                        required: "Vui lòng chọn ngày bắt đầu"
+                    },
+                    EndDate: {
+                        required: "Vui lòng chọn ngày kết thúc"
+                    },
+                    DiscountValue: {
+                        required: "Vui lòng nhập giá trị giảm",
+                        min: "Giá trị giảm phải lớn hơn 0"
+                    },
+                    MinimumOrderValue: {
+                        required: "Vui lòng nhập giá trị đơn tối thiểu",
+                        min: "Giá trị đơn tối thiểu phải lớn hơn 0"
+                    },
+                    "ProductIds": {
+                        required: "Vui lòng chọn ít nhất một sản phẩm",
+                        minlength: "Vui lòng chọn ít nhất một sản phẩm"
+                    }
+                }
+            });
+        });
+    </script>
+}

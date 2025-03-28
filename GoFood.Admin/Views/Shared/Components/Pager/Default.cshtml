@@ -1,0 +1,85 @@
+﻿@model GoFood.ViewModels.Common.PagedResultBase
+@{
+    var urlTemplate = Url.Action() + "?pageIndex={0}";
+    var request = ViewContext.HttpContext.Request;
+    foreach (var key in request.Query.Keys)
+    {
+        if (key == "pageIndex")
+        {
+            continue;
+        }
+        if (request.Query[key].Count > 1)
+        {
+            foreach (var item in (string[])request.Query[key])
+            {
+                urlTemplate += "&" + key + "=" + item;
+            }
+        }
+        else
+        {
+            urlTemplate += "&" + key + "=" + request.Query[key];
+        }
+    }
+
+    var startIndex = Math.Max(Model.PageIndex - 2, 1);
+    var finishIndex = Math.Min(Model.PageIndex + 2, Model.PageCount);
+}
+
+@if (Model.PageCount > 1)
+{
+    <div class="d-flex justify-content-center mt-4">
+        <ul class="pagination">
+            <li class="page-item @(Model.PageIndex == 1 ? "disabled" : "")">
+                <a class="page-link" title="Trang đầu" href="@urlTemplate.Replace("{0}", "1")">
+                    <i class="bx bx-chevrons-left"></i>
+                </a>
+            </li>
+            <li class="page-item @(Model.PageIndex == 1 ? "disabled" : "")">
+                <a class="page-link" title="Trang trước" href="@urlTemplate.Replace("{0}", (Model.PageIndex-1).ToString())">
+                    <i class="bx bx-chevron-left"></i>
+                </a>
+            </li>
+
+            @if (startIndex > 1)
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            }
+
+            @for (var i = startIndex; i <= finishIndex; i++)
+            {
+                if (i == Model.PageIndex)
+                {
+                    <li class="page-item active">
+                        <span class="page-link">@i</span>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item">
+                        <a class="page-link" title="Trang @i.ToString()" href="@urlTemplate.Replace("{0}", i.ToString())">@i</a>
+                    </li>
+                }
+            }
+
+            @if (finishIndex < Model.PageCount)
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            }
+
+            <li class="page-item @(Model.PageIndex == Model.PageCount ? "disabled" : "")">
+                <a class="page-link" title="Trang sau" href="@urlTemplate.Replace("{0}", (Model.PageIndex+1).ToString())">
+                    <i class="bx bx-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item @(Model.PageIndex == Model.PageCount ? "disabled" : "")">
+                <a class="page-link" title="Trang cuối" href="@urlTemplate.Replace("{0}", Model.PageCount.ToString())">
+                    <i class="bx bx-chevrons-right"></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+}

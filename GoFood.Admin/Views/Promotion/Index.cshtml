@@ -1,0 +1,189 @@
+@using GoFood.ViewModels.Catalog.Promotions
+@using GoFood.ViewModels.Common
+@using GoFood.Data.Enums
+@model PagedResult<PromotionViewModel>
+
+@{
+    ViewData["Title"] = "Danh sách khuyến mãi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="text-end mb-4">
+    <a asp-action="Create" asp-controller="Promotion" class="btn btn-primary">
+        <i class="bx bx-plus me-1"></i> Tạo khuyến mãi mới
+    </a>
+</div>
+
+<div class="card">
+    <h5 class="card-header">@TempData["result"]</h5>
+    <div class="card-header">
+        <form asp-action="Index" method="get">
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <label class="form-label">Tên khuyến mãi</label>
+                    <input type="text" value="@ViewBag.Keyword" name="keyword" class="form-control" placeholder="Nhập tên khuyến mãi..." />
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">Trạng thái</label>
+                    <select name="status" class="form-select" asp-items="@ViewBag.StatusSelectList">
+                        <option value="">Tất cả trạng thái</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2 d-flex align-items-end">
+                    <div class="btn-group w-100">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bx bx-search"></i> Tìm
+                        </button>
+                        <a asp-action="Index" class="btn btn-dark">
+                            <i class="bx bx-reset"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive text-nowrap">
+        @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                @ViewBag.ErrorMessage
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(ViewBag.SuccessMsg))
+        {
+            <div class="alert alert-success" id="msgAlert">
+                @ViewBag.SuccessMsg
+            </div>
+        }
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>TÊN KHUYẾN MÃI</th>
+                    <th>GIẢM GIÁ</th>
+                    <th>THỜI GIAN</th>
+                    <th>TRẠNG THÁI</th>
+                    <th>SỐ SẢN PHẨM</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+                @if (Model?.Items != null && Model.Items.Any())
+                {
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <div>@item.Name</div>
+                                <small class="text-muted">@item.Description</small>
+                            </td>
+                            <td>
+                                @if (item.DiscountType == DiscountType.Percentage)
+                                {
+                                    <span class="badge bg-label-info">@item.DiscountValue%</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-label-primary">@item.DiscountValue.ToString("N0")đ</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="text-muted">
+                                    <div><i class="bx bx-calendar me-1"></i>Từ: @item.StartDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div><i class="bx bx-calendar me-1"></i>Đến: @item.EndDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-label-@GetStatusColor(item.Status) me-1">
+                                    @GetStatusName(item.Status)
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-label-dark">@(item.Products?.Count ?? 0)</span>
+                            </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="@Url.Action("Edit", new { id = item.Id })">
+                                            <i class="bx bx-edit-alt me-1"></i> Chỉnh sửa
+                                        </a>
+                                        <a class="dropdown-item" href="@Url.Action("Details", new { id = item.Id })">
+                                            <i class="bx bx-detail me-1"></i> Chi tiết
+                                        </a>
+                                        @if (item.Status != PromotionStatus.Expired)
+                                        {
+                                            <form id="cancel-@item.Id" asp-action="UpdateStatus" asp-controller="Promotion" method="post" style="display: inline;">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="button" class="dropdown-item text-danger" 
+                                                        onclick="confirmCancel(@item.Id)">
+                                                    <i class="bx bx-x-circle me-1"></i> Hủy khuyến mãi
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center">Không có dữ liệu</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @await Component.InvokeAsync("Pager", Model)
+</div>
+
+@section Scripts {
+    <script>
+        function confirmCancel(id) {
+            if (confirm('Bạn có chắc muốn hủy khuyến mãi này?')) {
+                document.getElementById('cancel-' + id).submit();
+            }
+        }
+
+        // Tự động đóng alert sau 5 giây
+        setTimeout(function () {
+            $('.alert').alert('close');
+        }, 5000);
+    </script>
+}
+
+@functions {
+    string GetStatusName(PromotionStatus status)
+    {
+        switch (status)
+        {
+            case PromotionStatus.Active:
+                return "Đang hoạt động";
+            case PromotionStatus.Inactive:
+                return "Chưa hoạt động";
+            case PromotionStatus.Expired:
+                return "Đã hết hạn";
+            default:
+                return status.ToString();
+        }
+    }
+
+    string GetStatusColor(PromotionStatus status)
+    {
+        switch (status)
+        {
+            case PromotionStatus.Active:
+                return "success";
+            case PromotionStatus.Inactive:
+                return "warning";
+            case PromotionStatus.Expired:
+                return "danger";
+            default:
+                return "danger";
+        }
+    }
+} 

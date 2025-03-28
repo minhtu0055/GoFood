@@ -1,0 +1,115 @@
+@using GoFood.ViewModels.Catalog.Products
+@using GoFood.Data.Enums
+@model ProductViewModels
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var baseUrl = Configuration["BaseAddress"];
+}
+
+<div class="container-fluid">
+    <h1 class="mt-4">Chi tiết sản phẩm</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Danh sách sản phẩm</a></li>
+        <li class="breadcrumb-item active">Chi tiết</li>
+    </ol>
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-6 col-xs-12">
+                    <h5 class="mb-0">Thông tin sản phẩm</h5>
+                </div>
+                <div class="col-md-6 col-xs-12 text-end">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="bx bx-edit me-1"></i> Chỉnh sửa
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 35%">Tên sản phẩm:</th>
+                                    <td>@Model.Name</td>
+                                </tr>
+                                <tr>
+                                    <th>Mô tả:</th>
+                                    <td>@Model.Description</td>
+                                </tr>
+                                <tr>
+                                    <th>Giá:</th>
+                                    <td>@Model.Price.ToString("N0")đ</td>
+                                </tr>
+                                <tr>
+                                    <th>Số lượng:</th>
+                                    <td>@Model.Quantity</td>
+                                </tr>
+                                <tr>
+                                    <th>Danh mục:</th>
+                                    <td>@Model.CategoryName</td>
+                                </tr>
+                                <tr>
+                                    <th>Trạng thái:</th>
+                                    <td>
+                                        <span class="badge bg-label-@(Model.Status == ProductStatus.Active ? "success" : "danger") me-1">
+                                            @(Model.Status == ProductStatus.Active ? "Đang hoạt động" : "Không hoạt động")
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Ngày tạo:</th>
+                                    <td>@Model.DateCreated.ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="mb-3">Hình ảnh sản phẩm</h5>
+                    @if (Model.Images != null && Model.Images.Any())
+                    {
+                        <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                @for (int i = 0; i < Model.Images.Count; i++)
+                                {
+                                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                                        <img src="@(baseUrl + Model.Images[i])" class="d-block w-100 rounded" alt="@Model.Name" 
+                                             style="max-height: 400px; object-fit: contain;" onerror="this.src='/images/no-image.png'" />
+                                    </div>
+                                }
+                            </div>
+                            @if (Model.Images.Count > 1)
+                            {
+                                <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon"></span>
+                                </button>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center">
+                            <img src="/images/no-image.png" alt="No Image" class="img-fluid rounded" style="max-height: 400px;" />
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="mt-4">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bx bx-arrow-back me-1"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

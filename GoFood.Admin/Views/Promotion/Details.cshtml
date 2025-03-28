@@ -1,0 +1,155 @@
+@model GoFood.ViewModels.Catalog.Promotions.PromotionViewModel
+@using GoFood.Data.Enums
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "Chi tiết khuyến mãi";
+    var baseUrl = Configuration["BaseAddress"]?.TrimEnd('/');
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold py-3 mb-4">
+                <span class="text-muted fw-light">Khuyến mãi /</span> Chi tiết
+            </h4>
+        </div>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary me-2">
+                <i class="bx bx-edit-alt me-1"></i> Chỉnh sửa
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bx bx-arrow-back me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0">Thông tin khuyến mãi</h5>
+                    <small class="text-muted float-end">
+                        @switch (Model.Status)
+                        {
+                            case PromotionStatus.Active:
+                                <span class="badge bg-label-success">Đang hoạt động</span>
+                                break;
+                            case PromotionStatus.Inactive:
+                                <span class="badge bg-label-warning">Không hoạt động</span>
+                                break;
+                            case PromotionStatus.Expired:
+                                <span class="badge bg-label-danger">Đã hết hạn</span>
+                                break;
+                        }
+                    </small>
+                </div>
+
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Tên khuyến mãi</label>
+                                <p class="form-control-static">@Model.Name</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Mô tả</label>
+                                <p class="form-control-static">@Model.Description</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Loại giảm giá</label>
+                                <p class="form-control-static">
+                                    @if (Model.DiscountType == DiscountType.Percentage)
+                                    {
+                                        <span class="badge bg-label-info">Giảm @Model.DiscountValue%</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-label-primary">Giảm @Model.DiscountValue.ToString("N0")đ</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Thời gian áp dụng</label>
+                                <p class="form-control-static">
+                                    <i class="bx bx-calendar text-primary me-1"></i>
+                                    Từ: @Model.StartDate.ToString("dd/MM/yyyy HH:mm")
+                                    <br />
+                                    <i class="bx bx-calendar text-primary me-1"></i>
+                                    Đến: @Model.EndDate.ToString("dd/MM/yyyy HH:mm")
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Thời gian tạo/cập nhật</label>
+                                <p class="form-control-static">
+                                    <i class="bx bx-time-five text-primary me-1"></i>
+                                    Tạo: @Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")
+                                    <br />
+                                    <i class="bx bx-revision text-primary me-1"></i>
+                                    Cập nhật: @(Model.ModifiedDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Danh sách sản phẩm áp dụng</h5>
+                </div>
+                <div class="table-responsive text-nowrap">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>SẢN PHẨM</th>
+                                <th>GIÁ GỐC</th>
+                                <th>GIẢM GIÁ</th>
+                                <th>GIÁ CUỐI</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-border-bottom-0">
+                            @if (Model.Products != null && Model.Products.Any())
+                            {
+                                foreach (var product in Model.Products)
+                                {
+                                    var discountAmount = product.OriginalPrice - product.PromotionalPrice;
+                                    var discountPercent = (int)((discountAmount / product.OriginalPrice) * 100);
+                                    
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="@(string.IsNullOrEmpty(product.ProductImage) ? "/images/no-image.png" : baseUrl + product.ProductImage)"
+                                                     class="rounded me-3" style="width: 40px; height: 40px; object-fit: cover;" />
+                                                <div>
+                                                    <strong>@product.ProductName</strong>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>@product.OriginalPrice.ToString("N0")đ</td>
+                                        <td>
+                                            <span class="badge bg-label-danger">-@discountPercent%</span>
+                                            <small class="text-muted">(-@discountAmount.ToString("N0")đ)</small>
+                                        </td>
+                                        <td>
+                                            <strong class="text-primary">@product.PromotionalPrice.ToString("N0")đ</strong>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center">Không có sản phẩm nào được áp dụng</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

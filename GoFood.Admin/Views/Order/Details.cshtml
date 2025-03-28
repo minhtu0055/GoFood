@@ -1,0 +1,259 @@
+@model GoFood.ViewModels.Catalog.Orders.OrderViewModel
+@using GoFood.Data.Enums
+
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .progress {
+    background-color: #e9ecef;
+}
+.bg-light {
+    background-color: #e9ecef !important;
+}
+</style>
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4">Chi tiết đơn hàng #@Model.Id</h4>
+
+    <!-- Status Timeline -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between position-relative">
+                @{
+                    var statuses = new[] { Status.Pending, Status.Confirmed, Status.Shipping, Status.Completed };
+                    var currentIndex = Array.IndexOf(statuses, Model.Status);
+                    
+                    for (int i = 0; i < statuses.Length; i++)
+                    {
+                        var status = statuses[i];
+                        var isActive = i <= currentIndex && Model.Status != Status.Cancelled;
+                        DateTime? statusDate = null;
+                        if (status == Model.Status && Model.OrderDate != default(DateTime))
+                        {
+                            statusDate = Model.OrderDate;
+                        }
+                        
+                        <div class="text-center" style="width: 150px;">
+                            <div class="@(isActive ? "text-primary" : "text-muted")">
+                                <i class="bx @(status switch {
+                                    Status.Pending => "bx-time",
+                                    Status.Confirmed => "bx-check-circle",
+                                    Status.Shipping => "bx-car",
+                                    Status.Completed => "bx-package",
+                                    _ => "bx-x"
+                                }) fs-3"></i>
+                            </div>
+                            <div class="mt-2 @(isActive ? "text-dark" : "text-muted")">@status</div>
+                            @if (statusDate.HasValue)
+                            {
+                                <small class="text-muted">@statusDate.Value.ToString("HH:mm dd-MM-yyyy")</small>
+                            }
+                        </div>
+
+                        @if (i < statuses.Length - 1)
+                        {
+                            <div class="flex-grow-1 position-relative">
+                                <div class="progress" style="height: 2px; margin-top: 25px;">
+                                    <div class="progress-bar @(isActive ? "bg-primary" : "bg-light")" 
+                                         role="progressbar" 
+                                         style="width: 100%"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+
+            @if (Model.Status != Status.Cancelled && Model.Status != Status.Completed)
+            {
+                <div class="text-center mt-4">
+                    <form asp-action="UpdateStatus" method="post" class="d-inline-block">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="status" value="@((Status)(((int)Model.Status) + 1))" />
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bx bx-right-arrow-alt me-1"></i>
+                            Chuyển sang trạng thái tiếp theo
+                        </button>
+                    </form>
+                    
+                    <button type="button" class="btn btn-danger ms-2" onclick="confirmCancel('@Model.Id')">
+                        <i class="bx bx-x-circle me-1"></i>
+                        Hủy đơn hàng
+                    </button>
+                </div>
+            }
+            @if (Model.Status == Status.Cancelled)
+            {
+                <div class="text-center mt-3">
+                    <span class="badge bg-danger">Đơn hàng đã bị hủy</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Order Information -->
+        <div class="col-xl-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thông tin đơn hàng</h5>
+                    <span class="badge bg-@(Model.Status switch {
+                        Status.Pending => "warning",
+                        Status.Confirmed => "info",
+                        Status.Shipping => "primary",
+                        Status.Completed => "success",
+                        Status.Cancelled => "danger",
+                        _ => "secondary"
+                    })">@Model.Status</span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Khách hàng</label>
+                            <p class="form-control-static">@Model.Name</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Số điện thoại</label>
+                            <p class="form-control-static">@Model.PhoneNumber</p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ giao hàng</label>
+                        <p class="form-control-static">@Model.ShippingAddress</p>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Ngày đặt</label>
+                            <p class="form-control-static">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tổng tiền</label>
+                            <p class="form-control-static">@Model.TotalAmount.ToString("N0") đ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Chi tiết sản phẩm</h5>
+                </div>
+                <div class="table-responsive text-nowrap">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px">Ảnh</th>
+                                <th>Sản phẩm</th>
+                                <th>Đơn giá</th>
+                                <th>Số lượng</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.OrderDetails)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (item.IsCombo)
+                                        {
+                                            <img src="@(item.ComboImage ?? "/img/no-image.png")" 
+                                                 class="rounded" 
+                                                 style="width: 60px; height: 60px; object-fit: cover;" 
+                                                 alt="@item.ProductName" />
+                                        }
+                                        else
+                                        {
+                                            <img src="@(item.ProductImage ?? "/img/no-image.png")" 
+                                                 class="rounded" 
+                                                 style="width: 60px; height: 60px; object-fit: cover;" 
+                                                 alt="@item.ProductName" />
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-semibold">@item.ProductName</span>
+                                        </div>
+                                    </td>
+                                    <td>@item.Price.ToString("N0") đ</td>
+                                    <td>@item.Quantity</td>
+                                    <td>@((item.Price * item.Quantity).ToString("N0")) đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold">Tổng cộng:</td>
+                                <td class="fw-bold">@Model.TotalAmount.ToString("N0") đ</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="col-xl-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Thao tác</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Status == Status.Pending)
+                    {
+                        <button type="button" class="btn btn-danger w-100 mb-3" onclick="confirmCancel('@Model.Id')">
+                        <i class="bx bx-x-circle me-1"></i> Hủy đơn hàng
+                    </button>
+                    }
+                    else if (Model.Status != Status.Cancelled && Model.Status != Status.Completed)
+                    {
+                        <form asp-action="UpdateStatus" method="post" class="mb-3">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="status" value="@((Status)(((int)Model.Status) + 1))" />
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bx bx-right-arrow-alt me-1"></i>
+                                Chuyển sang trạng thái tiếp theo
+                            </button>
+                        </form>
+                    }
+
+                    <a href="@Url.Action("ExportInvoice", new { id = Model.Id })" class="btn btn-secondary w-100">
+                        <i class="bx bx-printer me-1"></i> In hóa đơn
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmCancel(id) {
+            if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+                $.post('/Order/CancelOrder/' + id, function (result) {
+                    if (result.success) {
+                        toastr.success('Hủy đơn hàng thành công');
+                        setTimeout(function() { location.reload(); }, 1000);
+                    } else {
+                        toastr.error('Có lỗi xảy ra');
+                    }
+                });
+            }
+        }
+
+        // Show success/error messages
+        @if (TempData["success"] != null)
+        {
+            <text>
+            toastr.success('@TempData["success"]');
+            </text>
+        }
+        @if (TempData["error"] != null)
+        {
+            <text>
+            toastr.error('@TempData["error"]');
+            </text>
+        }
+    </script>
+}

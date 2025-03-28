@@ -1,0 +1,185 @@
+﻿@model GoFood.ViewModels.Common.PagedResult<GoFood.ViewModels.Catalog.Combo.ComboViewModel>
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "Danh sách combo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="text-end mb-4">
+    <a asp-action="Create" asp-controller="Combo" class="btn btn-primary">
+        <i class="bx bx-plus me-1"></i> Tạo sản phẩm mới
+    </a>
+</div>
+<div class="card">
+        <div class="card-header">
+            <form asp-action="Index" method="get">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">Tên sản phẩm</label>
+                        <input type="text" value="@ViewBag.Keyword" name="keyword" class="form-control" placeholder="Nhập tên sản phẩm..." />
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label">Danh mục</label>
+                        <select name="sortBy" class="form-select">
+                            <option value="">Sắp xếp</option>
+                            <option value="price_asc" selected="@(ViewBag.SortBy == "price_asc")">Giá tăng dần</option>
+                            <option value="price_desc" selected="@(ViewBag.SortBy == "price_desc")">Giá giảm dần</option>
+                            <option value="name_asc" selected="@(ViewBag.SortBy == "name_asc")">Tên tăng dần</option>
+                            <option value="name_desc" selected="@(ViewBag.SortBy == "name_desc")">Tên giảm dần</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label">Giá</label>
+                        <div class="input-group">
+                            <input type="number" name="minPrice" class="form-control" placeholder="Từ" value="@ViewBag.MinPrice" min="0" />
+                            <input type="number" name="maxPrice" class="form-control" placeholder="Đến" value="@ViewBag.MaxPrice" min="0" />
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-2 d-flex align-items-end">
+                        <div class="btn-group w-100">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bx bx-search"></i> Tìm
+                            </button>
+                            <button type="button" onclick="window.location.href='/Combo/Index'" class="btn btn-dark">
+                                <i class="bx bx-reset"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="table-responsive text-nowrap">
+            @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+            {
+                <div class="alert alert-danger">
+                    @ViewBag.ErrorMessage
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(ViewBag.SuccessMsg))
+            {
+                <div class="alert alert-success" id="msgAlert">
+                    @ViewBag.SuccessMsg
+                </div>
+            }
+            <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tên combo</th>
+                            <th>Ảnh</th>
+                            <th>Mô tả</th>
+                            <th>Giá</th>
+                            <th>Số sản phẩm</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-border-bottom-0">
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.ImagePath))
+                                    {
+                                        var imageUrl = $"{Configuration["BaseAddress"]}{item.ImagePath}";
+                                        @* <div>Debug: @imageUrl</div> *@
+                                        <img src="@imageUrl" alt="@item.Name" width="100" class="img-thumbnail" onerror="this.onerror=null;this.src='/img/no-image.png';" />
+                                    }
+                                    else
+                                    {
+                                        <img src="/img/no-image.png" alt="No Image" width="100" class="img-thumbnail" />
+                                    }
+                                </td>
+                                <td>@Html.DisplayFor(modelItem => item.Description)</td>
+                                <td>@item.Price.ToString("N0") đ</td>
+                                <td>@Html.DisplayFor(modelItem => item.ProductCount)</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="switch-@item.Id" @(item.IsAvailable ? "checked" : "") onchange="updateAvailability('@item.Id', this.checked)">
+                                        <label class="form-check-label" for="switch-@item.Id">@(item.IsAvailable ? "Hoạt động" : "Không hoạt động")</label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                            <i class="bx bx-dots-vertical-rounded"></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="@Url.Action("Edit", new { id = item.Id })">
+                                                <i class="bx bx-edit-alt me-1"></i> Sửa
+                                            </a>
+                                            <a class="dropdown-item" href="@Url.Action("Details", new { id = item.Id })">
+                                                <i class="bx bx-detail me-1"></i> Chi tiết
+                                            </a>
+                                            <a class="dropdown-item" href="javascript:void(0);" onclick="deleteCombo('@item.Id')">
+                                                <i class="bx bx-trash me-1"></i> Xóa
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>        
+        </div>
+        @await Component.InvokeAsync("Pager", Model)
+</div>
+@section Scripts {
+    <script>
+        @* setTimeout(function () {
+            $('#msgAlert').fadeOut('slow');
+        }, 2000); *@
+
+        function updateAvailability(id, isAvailable) {
+            // Cập nhật label ngay lập tức
+            var label = $(`label[for="switch-${id}"]`);
+            label.text(isAvailable ? "Hoạt động" : "Không hoạt động");
+
+            $.ajax({
+                url: '/Combo/UpdateAvailability',
+                type: 'POST',
+                data: { id: id, isAvailable: isAvailable },
+                success: function (result) {
+                    if (result.success) {
+                        toastr.success("Cập nhật trạng thái thành công");
+                    } else {
+                        toastr.error("Cập nhật trạng thái thất bại");
+                        // Hoàn tác trạng thái nếu thất bại
+                        $(`#switch-${id}`).prop('checked', !isAvailable);
+                        label.text(!isAvailable ? "Hoạt động" : "Không hoạt động");
+                    }
+                },
+                error: function () {
+                    toastr.error("Có lỗi xảy ra");
+                    // Hoàn tác trạng thái nếu thất bại
+                    $(`#switch-${id}`).prop('checked', !isAvailable);
+                    label.text(!isAvailable ? "Hoạt động" : "Không hoạt động");
+                }
+            });
+        }
+
+        function deleteCombo(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa combo này?')) {
+                $.ajax({
+                    url: '/Combo/Delete',
+                    type: 'POST',
+                    data: { id: id },
+                    success: function (result) {
+                        if (result.success) {
+                            toastr.success(result.message);
+                            setTimeout(function () {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            toastr.error(result.message);
+                        }
+                    },
+                    error: function () {
+                        toastr.error('Có lỗi xảy ra');
+                    }
+                });
+            }
+        }
+    </script>
+}

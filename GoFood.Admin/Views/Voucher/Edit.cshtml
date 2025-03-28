@@ -1,0 +1,170 @@
+@using GoFood.Data.Enums
+@model GoFood.ViewModels.Catalog.Vouchers.UpdateVoucherRequest
+
+@{
+    ViewData["Title"] = "Cập nhật voucher";
+}
+
+<div class="container-fluid">
+    <h1 class="mt-4">Cập nhật voucher</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Danh sách voucher</a></li>
+        <li class="breadcrumb-item active">Cập nhật</li>
+    </ol>
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-6 col-xs-12">
+                    <a class="btn btn-success" asp-action="Index">
+                        <i class="bx bx-arrow-back me-1"></i> Về danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="col-md-8 mx-auto">
+                <form asp-action="Edit" method="post" id="edit-form">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-3 row">
+                        <label asp-for="Name" class="col-sm-3 col-form-label">Tên voucher</label>
+                        <div class="col-sm-9">
+                            <input asp-for="Name" class="form-control" placeholder="Nhập tên voucher..." />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="Description" class="col-sm-3 col-form-label">Mô tả</label>
+                        <div class="col-sm-9">
+                            <textarea asp-for="Description" rows="3" class="form-control" placeholder="Nhập mô tả voucher..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="StartDate" class="col-sm-3 col-form-label">Ngày bắt đầu</label>
+                        <div class="col-sm-9">
+                            <input asp-for="StartDate" type="datetime-local" class="form-control" />
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="EndDate" class="col-sm-3 col-form-label">Ngày kết thúc</label>
+                        <div class="col-sm-9">
+                            <input asp-for="EndDate" type="datetime-local" class="form-control" />
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="DiscountType" class="col-sm-3 col-form-label">Loại giảm giá</label>
+                        <div class="col-sm-9">
+                            <select asp-for="DiscountType" asp-items="@ViewBag.VoucherTypes" class="form-select"></select>
+                            <span asp-validation-for="DiscountType" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="DiscountValue" class="col-sm-3 col-form-label">Giá trị giảm</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input asp-for="DiscountValue" class="form-control" type="number" min="0" placeholder="Nhập giá trị giảm..." />
+                                <span class="input-group-text discount-unit">VNĐ</span>
+                            </div>
+                            <span asp-validation-for="DiscountValue" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="MinimumOrderValue" class="col-sm-3 col-form-label">Giá trị đơn tối thiểu</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input asp-for="MinimumOrderValue" class="form-control" type="number" min="0" placeholder="Nhập giá trị đơn tối thiểu..." />
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                            <span asp-validation-for="MinimumOrderValue" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <label asp-for="UsageLimit" class="col-sm-3 col-form-label">Số lần sử dụng tối đa</label>
+                        <div class="col-sm-9">
+                            <input asp-for="UsageLimit" class="form-control" type="number" min="1" placeholder="Nhập số lần sử dụng tối đa..." />
+                            <span asp-validation-for="UsageLimit" class="text-danger"></span>
+                            <small class="form-text text-muted">Để trống nếu không giới hạn số lần sử dụng</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 row">
+                        <div class="col-sm-9 offset-sm-3">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bx bx-save me-1"></i> Lưu thay đổi
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bx bx-arrow-back me-1"></i> Quay lại
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function () {
+            // Cập nhật đơn vị giảm giá khi thay đổi loại giảm giá
+            function updateDiscountUnit() {
+                var discountType = $("#DiscountType").val();
+                var unit = discountType == "@((int)DiscountType.Percentage)" ? "%" : "VNĐ";
+                $(".discount-unit").text(unit);
+            }
+
+            $("#DiscountType").change(updateDiscountUnit);
+            updateDiscountUnit();
+
+            // Validate form
+            $("#edit-form").validate({
+                rules: {
+                    Name: {
+                        required: true,
+                        minlength: 3
+                    },
+                    StartDate: {
+                        required: true
+                    },
+                    EndDate: {
+                        required: true
+                    },
+                    DiscountValue: {
+                        required: true,
+                        min: 0
+                    }
+                },
+                messages: {
+                    Name: {
+                        required: "Vui lòng nhập tên voucher",
+                        minlength: "Tên voucher phải có ít nhất 3 ký tự"
+                    },
+                    StartDate: {
+                        required: "Vui lòng chọn ngày bắt đầu"
+                    },
+                    EndDate: {
+                        required: "Vui lòng chọn ngày kết thúc"
+                    },
+                    DiscountValue: {
+                        required: "Vui lòng nhập giá trị giảm",
+                        min: "Giá trị giảm phải lớn hơn 0"
+                    }
+                }
+            });
+        });
+    </script>
+} 

@@ -1,0 +1,74 @@
+﻿@model GoFood.ViewModels.System.Users.UserUpdateRequest
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin/</span> Accounts Management</h4>
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Update User</h5>
+            <small class="text-muted float-end">Fill the details</small>
+        </div>
+        <div class="card-body">
+            @* @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            } *@
+            
+            <form  asp-controller="User" asp-action="Edit"  method="post" data-confirm="Are you sure you want to do that?">
+                <div asp-validation-summary="ModelOnly" class="text-danger" ></div>
+                <div class="mb-3">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" readonly class="form-control" placeholder="Enter FirstName" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-control" placeholder="Enter email" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="Enter phone number" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DateOfBirth" class="form-label"></label>
+                    <input asp-for="DateOfBirth" type="date" class="form-control" placeholder="Date of Birth" required="required" data-validation-required-message="Please enter your date of birth" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" readonly class="form-control" placeholder="Enter email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>               
+                <div class="mb-3">
+                    <label asp-for="IsActive" class="form-label"></label>
+                    <div class="form-check">
+                        <input asp-for="IsActive" class="form-check-input" type="radio" value="true" checked />
+                        <label class="form-check-label">Active</label>
+                    </div>
+                    <div class="form-check">
+                        <input asp-for="IsActive" class="form-check-input" type="radio" value="false"  />
+                        <label class="form-check-label">Inactive</label>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <a href="/User/Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+        
+    </div>
+</div>

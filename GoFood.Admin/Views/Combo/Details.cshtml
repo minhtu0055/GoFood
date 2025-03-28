@@ -1,0 +1,92 @@
+@using GoFood.ViewModels.Catalog.Combo
+@model ComboViewModel
+@{
+    ViewData["Title"] = "Chi tiết combo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <h1 class="mt-4">Chi tiết combo</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+        <li class="breadcrumb-item"><a href="/Combo">Danh sách combo</a></li>
+        <li class="breadcrumb-item active">Chi tiết</li>
+    </ol>
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-6 col-xs-12">
+                    <a class="btn btn-success" asp-action="Index">Về danh sách</a>
+                    <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Chỉnh sửa</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                    {
+                        <img src="@Model.ImagePath" class="img-fluid rounded" alt="@Model.Name" />
+                    }
+                </div>
+                <div class="col-md-8">
+                    <dl class="row">
+                        <dt class="col-sm-3">Tên combo</dt>
+                        <dd class="col-sm-9">@Model.Name</dd>
+
+                        <dt class="col-sm-3">Mô tả</dt>
+                        <dd class="col-sm-9">@Model.Description</dd>
+
+                        <dt class="col-sm-3">Giá</dt>
+                        <dd class="col-sm-9">@Model.Price.ToString("N0") đ</dd>
+
+                        <dt class="col-sm-3">Trạng thái</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.IsAvailable)
+                            {
+                                <span class="badge badge-success">Đang bán</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-warning">Ngừng bán</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Ngày tạo</dt>
+                        <dd class="col-sm-9">@Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")</dd>
+                    </dl>
+
+                    <h4 class="mt-4">Sản phẩm trong combo</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Tên sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn giá</th>
+                                    <th>Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ComboProducts)
+                                {
+                                    <tr>
+                                        <td>@item.ProductName</td>
+                                        <td>@item.Quantity</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-right"><strong>Tổng tiền:</strong></td>
+                                    <td><strong>@Model.Price.ToString("N0") đ</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

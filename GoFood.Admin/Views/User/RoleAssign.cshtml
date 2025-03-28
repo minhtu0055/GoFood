@@ -1,0 +1,39 @@
+@model GoFood.ViewModels.System.Users.RoleAssignRequest
+
+@{
+    ViewData["Title"] = "Gán quyền";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4">
+        <span class="text-muted fw-light">Quản lý người dùng /</span> Gán quyền
+    </h4>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <h5 class="card-header">Gán quyền người dùng</h5>
+                <div class="card-body">
+                    <form asp-action="RoleAssign" method="post" data-confirm="Are you sure you want to do that?">
+                        <input type="hidden" asp-for="Id" />
+                        @for (var i = 0; i < Model.Roles.Count; i++)
+                        {
+                            <div class="form-group">
+                                <label>
+                                    @Model.Roles[i].Name
+                                    <input type="checkbox" asp-for="Roles[i].Selected" />
+                                    <input type="hidden" asp-for="Roles[i].Id" />
+                                    <input type="hidden" asp-for="Roles[i].Name" />
+                                </label>
+                            </div>
+                        }
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

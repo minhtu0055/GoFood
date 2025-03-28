@@ -1,0 +1,102 @@
+@model GoFood.ViewModels.Catalog.Orders.OrderViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Hóa đơn #@Model.Id</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .header { text-align: center; margin-bottom: 30px; }
+        .info-section { margin-bottom: 20px; }
+        .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .table th, .table td { 
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .text-end { text-align: right; }
+        .total { 
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: right;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-style: italic;
+        }
+        @@media print {
+            .invoice-box {
+                box-shadow: none;
+                border: 0;
+            }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <div class="header">
+            <h1>HÓA ĐƠN</h1>
+            <p>Mã đơn hàng: #@Model.Id</p>
+            <p>Ngày: @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+        </div>
+
+        <div class="info-section">
+            <h3>Thông tin khách hàng</h3>
+            <p>Khách hàng: @Model.Name</p>
+            <p>Số điện thoại: @Model.PhoneNumber</p>
+            <p>Địa chỉ giao hàng: @Model.ShippingAddress</p>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th class="text-end">Đơn giá</th>
+                    <th class="text-end">Số lượng</th>
+                    <th class="text-end">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderDetails)
+                {
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td class="text-end">@item.Price.ToString("N0") đ</td>
+                        <td class="text-end">@item.Quantity</td>
+                        <td class="text-end">@((item.Price * item.Quantity).ToString("N0")) đ</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="total">
+            <p>Tổng cộng: @Model.TotalAmount.ToString("N0") đ</p>
+        </div>
+
+        <div class="footer">
+            <p>Cảm ơn quý khách đã sử dụng dịch vụ của GoFood!</p>
+        </div>
+
+        <div class="no-print" style="text-align: center; margin-top: 20px;">
+            <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer;">
+                In hóa đơn
+            </button>
+        </div>
+    </div>
+</body>
+</html>

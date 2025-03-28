@@ -1,0 +1,71 @@
+@model GoFood.ViewModels.System.Users.RegisterRequest
+
+@{
+    ViewData["Title"] = "Đăng ký";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Đăng ký tài khoản</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Register" asp-controller="Account" method="post">
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                        
+                        <div class="form-group mb-3">
+                            <label asp-for="FirstName">Họ</label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Nhập họ" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="LastName">Tên</label>
+                            <input asp-for="LastName" class="form-control" placeholder="Nhập tên" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>               
+                        <div class="form-group mb-3">
+                            <label asp-for="UserName">Tên đăng nhập</label>
+                            <input asp-for="UserName" class="form-control" placeholder="Nhập tên đăng nhập" />
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="Email">Email</label>
+                            <input asp-for="Email" class="form-control" placeholder="Nhập email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>    
+                        <div class="form-group mb-3">
+                            <label asp-for="PhoneNumber">Email</label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="Nhập Phone" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="Password">Mật khẩu</label>
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Nhập mật khẩu" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="ConfirmPassword">Xác nhận mật khẩu</label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Nhập lại mật khẩu" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>                   
+                        <div class="form-group mb-3">
+                            <button type="submit" class="btn btn-primary w-100">Đăng ký</button>
+                        </div>                       
+                        <div class="text-center">
+                            <p>Đã có tài khoản?
+                                <a asp-action="Login" asp-controller="Account">Đăng nhập ngay</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
